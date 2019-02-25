@@ -1,0 +1,5 @@
+color 	root 	knocks 	texture 	navel 	touch 	label
+black 	little_curl_up 	heavily 	little_blur 	little_sinking 	hard_smooth 	0
+light_white 	stiff 	clear 	blur 	even 	hard_smooth 	0
+light_white 	curl_up 	little_heavily 	blur 	even 	soft_stick 	0
+dark_green 	little_curl_up 	little_heavily 	little_blur 	sinking 	hard_smooth 	0
