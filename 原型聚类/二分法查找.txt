@@ -1,0 +1,51 @@
+#二分法寻找最优聚类
+
+def biKmeans(dataSet, k, distMeas=distEclud):
+    m = shape(dataSet)[0]
+    clusterAssment = mat(zeros((m,2)))
+    centroid0 = mean(dataSet, axis=0).tolist()[0]
+    centList =[centroid0] #create a list with one centroid
+    for j in range(m):#calc initial Error
+        clusterAssment[j,1] = distMeas(mat(centroid0), dataSet[j,:])**2
+    while (len(centList) < k):
+        lowestSSE = inf
+        #遍历当前的质心下标
+        for i in range(len(centList)):
+            #选取等于当前质心下标的样本点
+            ptsInCurrCluster = dataSet[nonzero(clusterAssment[:,0].A==i)[0],:]#get the data points currently in cluster i
+            #使用kMean算法对当前数据集进行二分，产生两个质心和对应样本点距离两个质心的最短距离，注意是针对上面等于当前质心下标的样本点
+            centroidMat, splitClustAss = kMeans(ptsInCurrCluster, 2, distMeas)
+            #计算划分的SSE，即误差和（一个质心变两个，对应着一个样本集变两个）
+            sseSplit = sum(splitClustAss[:,1])#compare the SSE to the currrent minimum
+            #计算非当前质心的其他质心的SSE
+            sseNotSplit = sum(clusterAssment[nonzero(clusterAssment[:,0].A!=i)[0],1])
+            print("sseSplit, and notSplit: ",sseSplit,sseNotSplit)
+            #计算划分后的最优SSE，即最有序的生成簇
+            if (sseSplit + sseNotSplit) < lowestSSE:
+                #最优的需要拆分的质心：一个簇，变成两个
+                bestCentToSplit = i
+                #最优的二分质心点的值
+                bestNewCents = centroidMat
+                #最优的距离上面两个质心的样本的距离
+                bestClustAss = splitClustAss.copy()
+                #最优的SSE的值
+                lowestSSE = sseSplit + sseNotSplit
+        #更新最优的距离上面两个质心的样本的距离矩阵等于1的（产生两个质心中的一个）质心值，取当前质心列表元素的个数（原来下标是0-len(cenList)-1)
+        #对应下面的向质心列表中新增那个质心下标
+        bestClustAss[nonzero(bestClustAss[:,0].A == 1)[0],0] = len(centList) #change 1 to 3,4, or whatever
+        #更新最优的距离上面两个质心的样本的距离矩阵等于0的（产生两个质心中的一个）质心值，取最优的质心，也就是要进行划分的那个质心
+        bestClustAss[nonzero(bestClustAss[:,0].A == 0)[0],0] = bestCentToSplit
+        print('the bestCentToSplit is: ',bestCentToSplit)
+        print('the len of bestClustAss is: ', len(bestClustAss))
+        #更新质心列表
+        #被划分的那个质心，对应的点的值，取0的对应的二分后的那个质质心值
+        centList[bestCentToSplit] = bestNewCents[0,:].tolist()[0]#replace a centroid with two best centroids
+        #新增一个质心
+        centList.append(bestNewCents[1,:].tolist()[0])
+        print("划分前的最优距离:\n", shape(clusterAssment[nonzero(clusterAssment[:, 0].A == bestCentToSplit)[0], :]))
+        print('划分后的最优距离:\n',shape(bestClustAss))
+        #更新原来到最优质心的那些样本点对应的值，改成现在新的质心和对应距离，完成划分的动作,两者的shape应该一样的，因为对bestCentToSplit
+        #划分前后，分成质心0和质心1两个集合
+        clusterAssment[nonzero(clusterAssment[:,0].A == bestCentToSplit)[0],:]= bestClustAss#reassign new clusters, and SSE
+
+    return mat(centList), clusterAssment
